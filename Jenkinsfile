@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     tools {
-        python 'Python310'   // Name of Python installation in Jenkins
         allure 'allure'
     }
 
