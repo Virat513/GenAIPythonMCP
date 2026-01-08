@@ -2,12 +2,13 @@ pipeline {
     agent any
 
     tools {
+        python 'Python310'   // Name of Python installation in Jenkins
         allure 'allure'
-        nodejs 'Node18'
     }
 
     environment {
         ALLURE_RESULTS = "allure-results"
+        GITHUB_TOKEN = credentials('github-pat-genai') // secure GitHub PAT
     }
 
     stages {
@@ -15,33 +16,40 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'master',
-                    url: 'https://github.com/Virat513/playwright-mcp-python.git'
+                    url: 'https://github.com/Virat513/GenAIPythonMCP.git',
+                    credentialsId: 'github-pat-genai'
             }
         }
 
-        stage('Install Node Dependencies') {
+        stage('Setup Python Environment') {
             steps {
                 bat """
-echo Installing dependencies...
-npm ci
+echo Creating virtual environment...
+python -m venv venv
+call venv\\Scripts\\activate
+echo Upgrading pip...
+python -m pip install --upgrade pip
 """
             }
         }
 
-        stage('Install Playwright Browsers') {
+        stage('Install Dependencies') {
             steps {
                 bat """
-echo Installing Chromium browser...
-npx playwright install chromium
+call venv\\Scripts\\activate
+echo Installing requirements...
+pip install -r requirements.txt
+pip install allure-pytest pytest
 """
             }
         }
 
-        stage('Run Playwright Tests') {
+        stage('Run Pytest Tests') {
             steps {
                 bat """
-echo Running Playwright tests on Chromium...
-npx playwright test --project=chromium --reporter=list,allure-playwright
+call venv\\Scripts\\activate
+echo Running pytest...
+pytest --alluredir=${ALLURE_RESULTS}
 """
             }
         }
