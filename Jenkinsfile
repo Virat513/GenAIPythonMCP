@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         ALLURE_RESULTS = "allure-results"
-        GITHUB_TOKEN = credentials('github-pat-genai') // secure GitHub PAT
+        // GITHUB_TOKEN = credentials('github-pat-genai') // optional if private repo
     }
 
     stages {
@@ -15,30 +15,19 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'master',
-                    url: 'https://github.com/Virat513/GenAIPythonMCP.git',
-                    credentialsId: 'github-pat-genai'
-            }
-        }
-
-        stage('Setup Python Environment') {
-            steps {
-                bat """
-echo Creating virtual environment...
-python -m venv venv
-call venv\\Scripts\\activate
-echo Upgrading pip...
-python -m pip install --upgrade pip
-"""
+                    url: 'https://github.com/Virat513/GenAIPythonMCP.git'
+                    // credentialsId: 'github-pat-genai' // uncomment if private repo
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 bat """
-call venv\\Scripts\\activate
-echo Installing requirements...
+echo Upgrading pip...
+python -m pip install --upgrade pip
+echo Installing required Python packages...
 pip install -r requirements.txt
-pip install allure-pytest pytest
+pip install pytest allure-pytest
 """
             }
         }
@@ -46,7 +35,6 @@ pip install allure-pytest pytest
         stage('Run Pytest Tests') {
             steps {
                 bat """
-call venv\\Scripts\\activate
 echo Running pytest...
 pytest --alluredir=${ALLURE_RESULTS}
 """
